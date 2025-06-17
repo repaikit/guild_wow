@@ -5,28 +5,10 @@ export default function GuildPage() {
   const [email, setEmail] = useState("");
   const [created, setCreated] = useState(false);
 
-  const handleCreate = async () => {
-  if (!guildName || !email) return alert("Vui lòng nhập đầy đủ");
-
-  try {
-    const res = await fetch("http://localhost:8000/api/guild/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // nếu dùng cookie/session
-      body: JSON.stringify({
-        guild_name: guildName,
-      }),
-    });
-
-    if (!res.ok) throw new Error(await res.text());
-
-    const data = await res.json();
-    console.log("Guild created:", data);
-    setCreated(true);
-  } catch (e) {
-    alert("Tạo guild thất bại: " + e.message);
-  }
-};
+  const handleCreate = () => {
+    if (!guildName || !email) return alert("Vui lòng nhập đầy đủ");
+    setCreated(true); // hiển thị giao diện guild sau khi tạo
+  };
 
   if (!created) {
     // Giao diện form tạo guild
