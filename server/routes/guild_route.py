@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from models.guild import GuildModel
 from services.guild_service import (
     create_guild,
-    get_guild_by_user,
+    get_guilds_by_user,
     invite_user_to_guild,
     reset_guild_for_user,
     search_guilds_by_keyword,
     join_guild,
+    leave_guild
 )
 from routes.users import get_current_user
 from pydantic import BaseModel
@@ -20,29 +21,34 @@ class GuildCreateRequest(BaseModel):
     guild_name: str
     description: Optional[str] = None
 
+class LeaveGuildRequest(BaseModel):
+    guild_name: str
 
 router = APIRouter()
 
 
 @router.post("/guild/create", response_model=GuildModel)
-async def create_my_guild(
-        payload: GuildCreateRequest,
-        current_user=Depends(get_current_user)
-):
+async def create_my_guild(payload: GuildCreateRequest, current_user=Depends(get_current_user)):
     try:
-        return await create_guild(
-            str(current_user["_id"]),
-            payload.guild_name,
-            # payload.description  # nếu không cần mô tả thì bỏ dòng này và field description trong schema
-        )
+        return await create_guild(str(current_user["_id"]), payload.guild_name, payload.description)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-@router.get("/guild/me", response_model=GuildModel)
-async def get_my_guild(current_user=Depends(get_current_user)):
+@router.post("/guild/leave", summary="Rời guild bằng tên")
+async def leave_guild_by_name_route(
+    payload: LeaveGuildRequest,
+    current_user=Depends(get_current_user)
+):
     try:
-        return await get_guild_by_user(str(current_user["_id"]))
+        await leave_guild(str(current_user["_id"]), payload.guild_name)
+        return {"message": "Rời guild thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/guild/me", response_model=List[GuildModel])
+async def get_my_guilds(current_user=Depends(get_current_user)):
+    try:
+        return await get_guilds_by_user(str(current_user["_id"]))
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 

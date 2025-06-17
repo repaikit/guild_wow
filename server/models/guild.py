@@ -7,6 +7,7 @@ from bson import ObjectId
 class GuildModel(BaseModel):
     id: str = Field(..., alias="_id")
     guild_name: str
+    description: Optional[str] = None  # ✅ mới
     owner_id: str
     owner_name: Optional[str] = ""
     members: List[str] = []
@@ -14,8 +15,6 @@ class GuildModel(BaseModel):
 
     model_config = {
         "populate_by_name": True,
-        "json_encoders": {
-            ObjectId: str
-        }
+        "json_encoders": {ObjectId: str}
     }
 
