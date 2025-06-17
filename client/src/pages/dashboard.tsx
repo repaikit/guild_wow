@@ -133,9 +133,6 @@ useEffect(() => {
                   <p className="text-sm text-gray-400 mb-3">
                     {guild.members.length} member{guild.members.length > 1 ? "s" : ""}
                   </p>
-                  <button className="text-sm bg-white text-black px-4 py-1.5 rounded-md font-semibold hover:bg-gray-300">
-                    Manage
-                  </button>
                 </div>
               ))}
             </div>

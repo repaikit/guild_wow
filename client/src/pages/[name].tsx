@@ -13,7 +13,7 @@ export default function GuildDetailPage() {
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
-  const {user, accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
 
   useEffect(() => {
     if (!name) return;
@@ -41,63 +41,73 @@ export default function GuildDetailPage() {
   }, [name]);
 
   const handleJoin = async () => {
-    setJoining(true);
-    setError("");
-    try {
-      const res = await fetch(API_ENDPOINTS.guilds.join, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          guild_name: guild.guild_name,
-        }),
-      });
+  setJoining(true);
+  setError("");
+  try {
+    const res = await fetch(API_ENDPOINTS.guilds.join, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ guild_name: guild.guild_name }),
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Tham gia thất bại");
-      }
-
-      const joinedGuild = await res.json();
-      alert(`Đã tham gia guild ${joinedGuild.guild_name} thành công!`);
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
-    } finally {
-      setJoining(false);
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.detail || "Tham gia thất bại");
     }
-  };
+
+    alert(`Đã tham gia guild ${guild.guild_name} thành công!`);
+
+    // ✅ Cập nhật state thay vì reload
+    setGuild((prev: any) => ({
+      ...prev,
+      members: [...prev.members, user?._id],
+    }));
+    setIsMember(true);
+
+  } catch (err: any) {
+    setError(err.message || "Có lỗi xảy ra");
+  } finally {
+    setJoining(false);
+  }
+};
 
   const handleLeave = async () => {
-    setLeaving(true);
-    setError("");
-    try {
-      const res = await fetch(API_ENDPOINTS.guilds.leave, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          guild_name: guild.guild_name,
-        }),
-      });
+  setLeaving(true);
+  setError("");
+  try {
+    const res = await fetch(API_ENDPOINTS.guilds.leave, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ guild_name: guild.guild_name }),
+    });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Rời guild thất bại");
-      }
-
-      alert(`Đã rời guild ${guild.guild_name} thành công`);
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
-    } finally {
-      setLeaving(false);
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.detail || "Rời guild thất bại");
     }
-  };
+
+    alert(`Đã rời guild ${guild.guild_name} thành công`);
+
+    // ✅ Cập nhật state thay vì reload
+    setGuild((prev: any) => ({
+      ...prev,
+      members: prev.members.filter((id: string) => id !== user?._id),
+    }));
+    setIsMember(false);
+
+  } catch (err: any) {
+    setError(err.message || "Có lỗi xảy ra");
+  } finally {
+    setLeaving(false);
+  }
+};
+
 
   if (loading) return <div className="text-white p-8">Loading guild info...</div>;
   if (!guild) return <div className="text-white p-8">Không tìm thấy guild</div>;
@@ -113,7 +123,10 @@ export default function GuildDetailPage() {
       <div className="flex gap-6">
         <div className="w-1/3 bg-[#2c2c35] p-4 rounded-xl">
           <p className="text-lg mb-2 font-semibold">Create page</p>
-          <button className="px-4 py-2 bg-[#1f1f29] border border-[#3a3a48] rounded-lg">
+          <button
+            onClick={() => alert("This feature is under development.")}
+            className="px-4 py-2 bg-[#1f1f29] border border-[#3a3a48] rounded-lg"
+          >
             + Create page
           </button>
         </div>
