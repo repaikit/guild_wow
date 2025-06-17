@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.params import Query
 from models.guild import GuildModel
 from services.guild_service import (
     create_guild,
@@ -7,7 +8,8 @@ from services.guild_service import (
     reset_guild_for_user,
     search_guilds_by_keyword,
     join_guild,
-    leave_guild
+    leave_guild, 
+    get_guilds_with_min_members
 )
 from routes.users import get_current_user
 from pydantic import BaseModel
@@ -25,6 +27,8 @@ class LeaveGuildRequest(BaseModel):
     guild_name: str
 
 router = APIRouter()
+
+explore_router = APIRouter()
 
 
 @router.post("/guild/create", response_model=GuildModel)
@@ -80,3 +84,8 @@ async def join_guild_route(
         return await join_guild(str(current_user["_id"]), payload.guild_name)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/guild/explore", response_model=List[GuildModel])
+async def explore_guilds(min_members: int = Query(5, ge=1)):
+    return await get_guilds_with_min_members(min_members=min_members)
+

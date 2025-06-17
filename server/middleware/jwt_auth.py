@@ -31,6 +31,8 @@ PUBLIC_ROUTES = [
     "/api/leaderboard/monthly",
     "/api/auth/verify-email",
     "/api/x/callback",
+    "/api/guild/explore",
+    "/api/guild/search",
 ]
 
 

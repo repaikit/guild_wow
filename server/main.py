@@ -72,7 +72,6 @@ app.add_middleware(JWTAuthMiddleware)
 app.include_router(guild_router, prefix="/api", tags=["guild"])
 app.include_router(user_router, prefix="/api", tags=["user"])
 
-
 # ✅ Default route
 from fastapi.responses import JSONResponse
 

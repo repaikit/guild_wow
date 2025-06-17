@@ -133,4 +133,23 @@ async def join_guild(user_id: str, guild_name: str) -> GuildModel:
     return GuildModel(**updated)
 
 
+async def get_guilds_with_min_members(min_members: int = 5) -> List[GuildModel]:
+    guilds_collection = await get_guilds_collection()
+
+    cursor = guilds_collection.find({
+        "$expr": {
+            "$gte": [
+                { "$size": "$members" },
+                min_members
+            ]
+        }
+    })
+
+    results = []
+    async for guild in cursor:
+        guild["_id"] = str(guild["_id"])
+        results.append(GuildModel(**guild))
+    return results
+
+
 
