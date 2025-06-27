@@ -43,9 +43,13 @@ export default function GuildPage() {
 
       // Điều hướng sang trang chi tiết guild
       router.push(`/${guildName}`);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Lỗi tạo guild:", err);
-      setError(err.message || "Lỗi không xác định");
+      if (err instanceof Error) {
+        setError(err.message || "Lỗi không xác định");
+      } else {
+        setError("Lỗi không xác định");
+      }
     } finally {
       setLoading(false);
     }

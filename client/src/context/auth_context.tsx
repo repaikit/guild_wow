@@ -119,8 +119,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+  const run = async () => {
+    await checkAuth();
+  };
+  run();
+}, []);
+
 
   return (
     <AuthContext.Provider

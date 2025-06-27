@@ -6,35 +6,35 @@ import { useAuth } from "@/context/auth_context";
 
 export default function Dashboard() {
   const router = useRouter();
-  const { loginAsGuest, isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   const [myGuilds, setMyGuilds] = useState<Guild[]>([]);
   const [exploreGuilds, setExploreGuilds] = useState<Guild[]>([]);
-  const [rawExploreGuilds, setRawExploreGuilds] = useState<Guild[]>([]); 
+  const [rawExploreGuilds, setRawExploreGuilds] = useState<Guild[]>([]);
 
   // Fetch explore guilds (public)
   // Fetch explore guilds (public)
-useEffect(() => {
-  const fetchExploreGuilds = async () => {
-    try {
-      const res = await fetch(`${API_ENDPOINTS.guilds.explore}?min_members=1`);
-      const data = await res.json();
+  useEffect(() => {
+    const fetchExploreGuilds = async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.guilds.explore}?min_members=1`);
+        const data = await res.json();
 
-      if (Array.isArray(data)) {
-        // setExploreGuilds(data); // ✅ đúng: lưu vào exploreGuilds
-        setRawExploreGuilds(data); // ✅ đúng: lưu vào rawExploreGuilds
-      } else {
-        console.error("Explore guilds không phải mảng:", data);
-        setRawExploreGuilds([]); // fallback
+        if (Array.isArray(data)) {
+          // setExploreGuilds(data); // ✅ đúng: lưu vào exploreGuilds
+          setRawExploreGuilds(data); // ✅ đúng: lưu vào rawExploreGuilds
+        } else {
+          console.error("Explore guilds không phải mảng:", data);
+          setRawExploreGuilds([]); // fallback
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải explore guilds:", err);
+        setRawExploreGuilds([]);
       }
-    } catch (err) {
-      console.error("Lỗi khi tải explore guilds:", err);
-      setRawExploreGuilds([]);
-    }
-  };
+    };
 
-  fetchExploreGuilds();
-}, []);
+    fetchExploreGuilds();
+  }, []);
 
   // Fetch my guilds nếu đã đăng nhập
   const fetchMyGuilds = async () => {
@@ -90,21 +90,31 @@ useEffect(() => {
           <div className="flex gap-3">
             {!isAuthenticated && (
               <button
-                onClick={loginAsGuest}
+                onClick={() => router.push("/login")}
                 className="bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
               >
-                Login as Guest
+                Login
               </button>
             )}
 
+
             {isAuthenticated && (
-              <button
-                onClick={() => router.push("/guild")}
-                className="bg-white text-black px-5 py-2 rounded-lg font-semibold hover:bg-gray-200 transition"
-              >
-                + Create Guild
-              </button>
+              <>
+                <button
+                  onClick={() => router.push("/guild")}
+                  className="bg-white text-black px-5 py-2 rounded-lg font-semibold hover:bg-gray-200 transition"
+                >
+                  + Create Guild
+                </button>
+                <button
+                  onClick={() => logout()}
+                  className="bg-red-700 text-white px-5 py-2 rounded-lg font-semibold hover:bg-gray-600 transition"
+                >
+                  Logout
+                </button>
+              </>
             )}
+
           </div>
         </div>
 
@@ -116,7 +126,7 @@ useEffect(() => {
             <p className="text-gray-400 italic">Please log in to view your guilds.</p>
           ) : myGuilds.length === 0 ? (
             <p className="text-gray-400 italic">
-              You haven't joined any guilds. Please join or create one.
+              You haven&apos;t joined any guilds. Please join or create one.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

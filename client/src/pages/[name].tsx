@@ -7,7 +7,13 @@ export default function GuildDetailPage() {
   const router = useRouter();
   const { name } = router.query;
   const [error, setError] = useState("");
-  const [guild, setGuild] = useState<any>(null);
+  interface Guild {
+    guild_name: string;
+    members: string[];
+    owner_name: string;
+  }
+
+  const [guild, setGuild] = useState<Guild | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -22,7 +28,7 @@ export default function GuildDetailPage() {
       try {
         const res = await fetch(API_ENDPOINTS.guilds.search(name as string));
         const data = await res.json();
-        const exact = data.find((g: any) => g.guild_name === name);
+        const exact = data.find((g: Guild) => g.guild_name === name);
         if (exact) {
           setGuild(exact);
           setIsMember(exact.members?.includes(user?._id));
@@ -38,20 +44,25 @@ export default function GuildDetailPage() {
     };
 
     fetchGuild();
-  }, [name]);
+  }, [name, router, user?._id]);
 
   const handleJoin = async () => {
-  setJoining(true);
-  setError("");
-  try {
-    const res = await fetch(API_ENDPOINTS.guilds.join, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ guild_name: guild.guild_name }),
-    });
+    if (!guild?.guild_name) {
+      setError("Guild information is not available");
+      return;
+    }
+
+    setJoining(true);
+    setError("");
+    try {
+      const res = await fetch(API_ENDPOINTS.guilds.join, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ guild_name: guild.guild_name }),
+      });
 
     if (!res.ok) {
       const data = await res.json();
@@ -61,31 +72,42 @@ export default function GuildDetailPage() {
     alert(`Đã tham gia guild ${guild.guild_name} thành công!`);
 
     // ✅ Cập nhật state thay vì reload
-    setGuild((prev: any) => ({
-      ...prev,
-      members: [...prev.members, user?._id],
-    }));
+    if (user?._id) {
+      setGuild((prev) => prev && ({
+        ...prev,
+        members: [...prev.members, user._id],
+      }));
+    }
     setIsMember(true);
 
-  } catch (err: any) {
-    setError(err.message || "Có lỗi xảy ra");
+  } catch (err) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Có lỗi xảy ra");
+    }
   } finally {
     setJoining(false);
   }
 };
 
   const handleLeave = async () => {
-  setLeaving(true);
-  setError("");
-  try {
-    const res = await fetch(API_ENDPOINTS.guilds.leave, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ guild_name: guild.guild_name }),
-    });
+    if (!guild?.guild_name) {
+      setError("Guild information is not available");
+      return;
+    }
+
+    setLeaving(true);
+    setError("");
+    try {
+      const res = await fetch(API_ENDPOINTS.guilds.leave, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ guild_name: guild.guild_name }),
+      });
 
     if (!res.ok) {
       const data = await res.json();
@@ -95,22 +117,36 @@ export default function GuildDetailPage() {
     alert(`Đã rời guild ${guild.guild_name} thành công`);
 
     // ✅ Cập nhật state thay vì reload
-    setGuild((prev: any) => ({
-      ...prev,
-      members: prev.members.filter((id: string) => id !== user?._id),
-    }));
+    if (user?._id) {
+      setGuild((prev) => prev && ({
+        ...prev,
+        members: prev.members.filter((id: string) => id !== user._id),
+      }));
+    }
     setIsMember(false);
 
-  } catch (err: any) {
-    setError(err.message || "Có lỗi xảy ra");
+  } catch (err) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Có lỗi xảy ra");
+    }
   } finally {
     setLeaving(false);
   }
 };
 
 
-  if (loading) return <div className="text-white p-8">Loading guild info...</div>;
-  if (!guild) return <div className="text-white p-8">Không tìm thấy guild</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#0e0e12] flex items-center justify-center">
+      <div className="text-white text-xl">Loading guild info...</div>
+    </div>
+  );
+  if (!guild) return (
+    <div className="min-h-screen bg-[#0e0e12] flex items-center justify-center">
+      <div className="text-white text-xl">Không tìm thấy guild</div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#0e0e12] text-white p-6 font-sans">
@@ -132,36 +168,40 @@ export default function GuildDetailPage() {
         </div>
 
         <div className="w-2/3 bg-[#2c2c35] p-4 rounded-xl flex justify-between items-start">
-          <div>
-            <p className="text-lg font-bold mb-2">👾 Member</p>
-            <p className="text-sm text-gray-400">{guild.members?.length || 0} member(s)</p>
-          </div>
+           <div>
+             <p className="text-lg font-bold mb-2">👾 Member</p>
+             <p className="text-sm text-gray-400">
+               {guild?.members ? `${guild.members.length} member${guild.members.length !== 1 ? 's' : ''}` : '0 members'}
+             </p>
+           </div>
 
-          <div className="text-right space-y-2">
-            <p className="text-sm text-green-400">✅ Open access</p>
-            <p className="text-sm text-gray-400">Anyone can join</p>
+           <div className="text-right space-y-2">
+             <p className="text-sm text-green-400">✅ Open access</p>
+             <p className="text-sm text-gray-400">Anyone can join</p>
 
-            {!isMember ? (
-              <button
-                onClick={handleJoin}
-                disabled={joining}
-                className="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                {joining ? "Joining..." : "Join guild"}
-              </button>
-            ) : (
-              <button
-                onClick={handleLeave}
-                disabled={leaving}
-                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {leaving ? "Leaving..." : "Leave guild"}
-              </button>
-            )}
+             {user && (
+               !isMember ? (
+                 <button
+                   onClick={handleJoin}
+                   disabled={joining}
+                   className="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                 >
+                   {joining ? "Joining..." : "Join guild"}
+                 </button>
+               ) : (
+                 <button
+                   onClick={handleLeave}
+                   disabled={leaving}
+                   className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                 >
+                   {leaving ? "Leaving..." : "Leave guild"}
+                 </button>
+               )
+             )}
 
-            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-          </div>
-        </div>
+             {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+           </div>
+         </div>
       </div>
     </div>
   );
